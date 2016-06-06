@@ -3,12 +3,6 @@
 open Newtonsoft.Json
 open Tweetinvi
 
-type SimpleTweet =
-    {Username: string;
-    Text: string;
-    Time: System.DateTime;
-    Id: int64;
-    }
 module Twitter = 
 
     let getCredentials () = 
@@ -52,6 +46,27 @@ module Twitter =
             do System.Diagnostics.Debug.WriteLine("Couldn't pull tweets " + (Tweetinvi.ExceptionHandler.GetLastException()).TwitterDescription) 
             Seq.empty<Tweetinvi.Core.Interfaces.ITweet>
         |> Seq.filter isGoodTweet
+
+    let getTweetsWithSentiment () = 
+        let goodParameters = 
+            
+            let temp = new Tweetinvi.Core.Parameters.TweetSearchParameters("%40alaskaair %3A)")
+            temp.MaximumNumberOfResults <- 3200
+            temp
+        let badParameters =     
+            let temp = new Tweetinvi.Core.Parameters.TweetSearchParameters("%40alaskaair %3A(")
+            temp.MaximumNumberOfResults <- 3200
+            temp
+        Tweetinvi.TweetinviEvents.QueryBeforeExecute.Add( fun a -> a.TwitterQuery.Timeout <- System.TimeSpan.FromSeconds(60.0))    
+        try 
+             Seq.append
+                (Tweetinvi.Search.SearchTweets(goodParameters) |> Seq.map (fun x -> (Good,x.Id)))
+                (Tweetinvi.Search.SearchTweets(badParameters) |> Seq.map (fun x -> (Bad,x.Id)))
+        with
+        | exn -> 
+            do System.Diagnostics.Debug.WriteLine("Couldn't pull tweets " + (Tweetinvi.ExceptionHandler.GetLastException()).TwitterDescription) 
+            Seq.empty<Sentiment*int64>
+        |> Seq.filter (fun (s,x) -> isGoodTweet x)
 
     let simplifyTweet (tweet: Tweetinvi.Core.Interfaces.ITweet) =
         {Username = tweet.CreatedBy.ScreenName; Text = tweet.Text; Time = tweet.TweetLocalCreationDate; Id = tweet.Id}

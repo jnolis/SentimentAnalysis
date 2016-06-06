@@ -1,8 +1,6 @@
 ﻿namespace SentimentAnalysis
 
-type Sentiment =
-    | Bad
-    | Good
+
     
 type AnalyzedTweet =
     {Tweet: SimpleTweet;

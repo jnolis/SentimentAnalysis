@@ -1,5 +1,17 @@
 ﻿namespace SentimentAnalysis
 
+type Sentiment =
+    | Bad
+    | Good
+
+
+type SimpleTweet =
+    {Username: string;
+    Text: string;
+    Time: System.DateTime;
+    Id: int64;
+    }
+
 module SharedCode =
     let getUpLocation (levels:int) = 
         let upString =  Seq.replicate levels @"..\"
