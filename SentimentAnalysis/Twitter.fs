@@ -51,22 +51,24 @@ module Twitter =
         let goodParameters = 
             
             let temp = new Tweetinvi.Core.Parameters.TweetSearchParameters("%40alaskaair %3A)")
-            temp.MaximumNumberOfResults <- 3200
+            temp.MaximumNumberOfResults <- 100
             temp
         let badParameters =     
             let temp = new Tweetinvi.Core.Parameters.TweetSearchParameters("%40alaskaair %3A(")
-            temp.MaximumNumberOfResults <- 3200
+            temp.MaximumNumberOfResults <- 100
             temp
         Tweetinvi.TweetinviEvents.QueryBeforeExecute.Add( fun a -> a.TwitterQuery.Timeout <- System.TimeSpan.FromSeconds(60.0))    
         try 
              Seq.append
-                (Tweetinvi.Search.SearchTweets(goodParameters) |> Seq.map (fun x -> (Good,x.Id)))
-                (Tweetinvi.Search.SearchTweets(badParameters) |> Seq.map (fun x -> (Bad,x.Id)))
+                (Tweetinvi.Search.SearchTweets(goodParameters) |> Seq.map (fun x -> (Good,x)))
+                (Tweetinvi.Search.SearchTweets(badParameters) |> Seq.map (fun x -> (Bad,x)))
         with
         | exn -> 
             do System.Diagnostics.Debug.WriteLine("Couldn't pull tweets " + (Tweetinvi.ExceptionHandler.GetLastException()).TwitterDescription) 
-            Seq.empty<Sentiment*int64>
+            Seq.empty<Sentiment*Tweetinvi.Core.Interfaces.ITweet>
         |> Seq.filter (fun (s,x) -> isGoodTweet x)
+        |> Seq.map (fun (s,x) -> (x.Id,s))
+        |> Map.ofSeq
 
     let simplifyTweet (tweet: Tweetinvi.Core.Interfaces.ITweet) =
         {Username = tweet.CreatedBy.ScreenName; Text = tweet.Text; Time = tweet.TweetLocalCreationDate; Id = tweet.Id}
